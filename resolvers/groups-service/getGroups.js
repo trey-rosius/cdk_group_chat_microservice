@@ -1,5 +1,5 @@
 export function request(ctx) {
-  const { user_id } = ctx.args;
+  const { token, limit } = ctx.args;
 
   return {
     version: "2018-05-29",
@@ -11,7 +11,7 @@ export function request(ctx) {
         Accept: "application/json",
       },
     },
-    resourcePath: `/users/${user_id}`,
+    resourcePath: `/groups?limit=${limit}`,
   };
 }
 
@@ -19,5 +19,5 @@ export function response(ctx) {
   console.log(`response is ${ctx.result}`);
   const res = JSON.parse(ctx.result.body);
 
-  return res;
+  return { items: res };
 }

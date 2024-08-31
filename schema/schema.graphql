@@ -10,21 +10,25 @@ type Mutation {
   addGroupParticipant(
     group_id: String!
     user_id: String!
-    role: ROLE!
+    role: String!
   ): String! @aws_api_key
-  sendMessage(input: CreateMessageInput!): Message! @aws_api_key
+  sendGroupMessage(input: CreateMessageInput!): Message! @aws_api_key
   addTypingIndicator(input: CreateTypingInput!): Typing! @aws_api_key
 }
 
 type Query {
-  getUserAccount(userId: String!): User! @aws_api_key
+  getUserAccount(user_id: String!): User! @aws_api_key
   getGroup(group_id: String!): Group! @aws_api_key
-  getGroupMessages(group_id: String, token: String, limit: Int!): [Group!]!
-    @aws_api_key
+  getGroupMessages(
+    group_id: String!
+    token: String
+    limit: Int!
+  ): GroupMessagesResult! @aws_api_key
+  getGroups(token: String, limit: Int!): GroupsResult! @aws_api_key
 }
 type Subscription {
   onCreateMessages: Message
-    @aws_subscribe(mutations: ["sendMessage"])
+    @aws_subscribe(mutations: ["sendGroupMessage"])
     @aws_api_key
 
   onAddingTypingIndicator: Typing
@@ -52,6 +56,13 @@ type Group @aws_api_key {
   updated_at: AWSTimestamp
 }
 
+type GroupMessagesResult @aws_api_key {
+  items: [Message!]!
+}
+type GroupsResult @aws_api_key {
+  items: [Group!]!
+}
+
 type Message @aws_api_key {
   id: String!
   user_id: String!
@@ -62,6 +73,11 @@ type Message @aws_api_key {
   video_url: String
   created_at: AWSTimestamp!
   updated_at: AWSTimestamp
+}
+input CreateUserInput @aws_api_key {
+  username: String!
+  email: AWSEmail!
+  profile_pic_url: String
 }
 
 input CreateMessageInput @aws_api_key {
@@ -82,22 +98,18 @@ input CreateGroupInput @aws_api_key {
 
 type Typing @aws_api_key {
   id: String!
-  userId: String!
-  groupId: String!
+  user_id: String!
+  group_id: String!
   typing: Boolean!
 }
 
-type CreateTypingInput @aws_api_key {
-  userId: String!
-  groupId: String!
+input CreateTypingInput @aws_api_key {
+  user_id: String!
+  group_id: String!
   typing: Boolean!
 }
 
 type Member @aws_api_key {
-  user_id: String!
-  role: ROLE!
-}
-input MemberInput @aws_api_key {
   user_id: String!
   role: ROLE!
 }
@@ -109,9 +121,4 @@ enum MESSAGETYPE {
   TEXT
   IMAGE
   VIDEO
-}
-input CreateUserInput @aws_cognito_user_pools {
-  username: String!
-  email: AWSEmail!
-  profile_pic_url: String
 }

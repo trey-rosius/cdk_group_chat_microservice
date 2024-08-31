@@ -12,48 +12,11 @@ export class CdkGroupChatMicroserviceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const userPool: cognito.UserPool = new cognito.UserPool(
-      this,
-      "package-delivery-microservice-api-userpool",
-      {
-        selfSignUpEnabled: true,
-        accountRecovery: cognito.AccountRecovery.PHONE_AND_EMAIL,
-        userVerification: {
-          emailStyle: cognito.VerificationEmailStyle.CODE,
-        },
-        autoVerify: {
-          email: true,
-        },
-        standardAttributes: {
-          email: {
-            required: true,
-            mutable: true,
-          },
-        },
-      }
-    );
-
-    const userPoolClient: cognito.UserPoolClient = new cognito.UserPoolClient(
-      this,
-      "package-delivery-microservice-UserPoolClient",
-      {
-        userPool,
-      }
-    );
     //create our API
-    const api = new appsync.GraphqlApi(this, "packageDeliveryMicroserviceAPI", {
-      name: "packageDeliveryMicroserviceAPI",
+    const api = new appsync.GraphqlApi(this, "group-chat-api-microservice", {
+      name: "groupChatApiMicroservice",
       definition: appsync.Definition.fromFile("./schema/schema.graphql"),
       authorizationConfig: {
-        additionalAuthorizationModes: [
-          {
-            authorizationType: appsync.AuthorizationType.USER_POOL,
-            userPoolConfig: {
-              userPool: userPool,
-            },
-          },
-        ],
-
         defaultAuthorization: {
           authorizationType: appsync.AuthorizationType.API_KEY,
           apiKeyConfig: {
@@ -70,23 +33,23 @@ export class CdkGroupChatMicroserviceStack extends cdk.Stack {
     });
 
     const userServiceAPIDatasource = api.addHttpDataSource(
-      "userService",
-      "https://emp2uhgrjj.us-east-2.awsapprunner.com"
+      "usersService",
+      "http://user-service-ALB-2010888504.us-east-1.elb.amazonaws.com"
     );
 
-    const packageServiceAPIDatasource = api.addHttpDataSource(
-      "packageService",
-      "https://ps8m23mxrp.us-east-2.awsapprunner.com"
+    const groupServiceAPIDatasource = api.addHttpDataSource(
+      "groupsService",
+      "http://group-service-ALB-705424959.us-east-1.elb.amazonaws.com"
     );
 
-    const deliveryServiceAPIDatasource = api.addHttpDataSource(
-      "deliveryService",
-      "https://2puvdrcruv.us-east-2.awsapprunner.com"
+    const messageServiceAPIDatasource = api.addHttpDataSource(
+      "messagesService",
+      "http://message-service-ALB-1078654750.us-east-1.elb.amazonaws.com"
     );
 
-    const paymentsAPIDatasource = api.addHttpDataSource(
-      "paymentService",
-      "https://spzvacpdpm.us-east-2.awsapprunner.com"
+    const typingAPIDatasource = api.addHttpDataSource(
+      "typingIndicatorService",
+      "http://typing-indicator-service-ALB-380461430.us-east-1.elb.amazonaws.com"
     );
 
     const nonDataSource = api.addNoneDataSource("none");
@@ -100,7 +63,7 @@ export class CdkGroupChatMicroserviceStack extends cdk.Stack {
         dataSource: userServiceAPIDatasource,
         name: "createUserAccountFunction",
         code: appsync.Code.fromAsset(
-          "./resolvers/user-service/createUserAccount.js"
+          "./resolvers/users-service/createUserAccount.js"
         ),
         runtime: appsync.FunctionRuntime.JS_1_0_0,
       }
@@ -114,7 +77,7 @@ export class CdkGroupChatMicroserviceStack extends cdk.Stack {
         dataSource: nonDataSource,
         name: "formatUserAccountInputFunction",
         code: appsync.Code.fromAsset(
-          "./resolvers/user-service/formatUserAccountInput.js"
+          "./resolvers/users-service/formatUserAccountInput.js"
         ),
         runtime: appsync.FunctionRuntime.JS_1_0_0,
       }
@@ -139,103 +102,76 @@ export class CdkGroupChatMicroserviceStack extends cdk.Stack {
       dataSource: userServiceAPIDatasource,
       runtime: appsync.FunctionRuntime.JS_1_0_0,
       code: appsync.Code.fromAsset(
-        "./resolvers/user-service/getUserAccount.js"
+        "./resolvers/users-service/getUserAccount.js"
       ),
     });
 
-    new appsync.Resolver(this, "getUsersByTypeResolver", {
+    new appsync.Resolver(this, "getMessagesPerGroupResolver", {
       api,
       typeName: "Query",
-      fieldName: "getUsersByType",
-      dataSource: userServiceAPIDatasource,
+      fieldName: "getGroupMessages",
+      dataSource: messageServiceAPIDatasource,
       runtime: appsync.FunctionRuntime.JS_1_0_0,
       code: appsync.Code.fromAsset(
-        "./resolvers/user-service/getUsersByType.js"
+        "./resolvers/messages-service/getMessagesPerGroup.js"
       ),
     });
 
-    new appsync.Resolver(this, "getPackagesByStatusResolver", {
+    new appsync.Resolver(this, "createGroupResolver", {
+      api,
+      typeName: "Mutation",
+      fieldName: "createGroup",
+      dataSource: groupServiceAPIDatasource,
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset("./resolvers/groups-service/createGroup.js"),
+    });
+    new appsync.Resolver(this, "sendGroupMessageResolver", {
+      api,
+      typeName: "Mutation",
+      fieldName: "sendGroupMessage",
+      dataSource: messageServiceAPIDatasource,
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        "./resolvers/messages-service/sendGroupMessage.js"
+      ),
+    });
+
+    new appsync.Resolver(this, "addGroupParticipantResolver", {
+      api,
+      typeName: "Mutation",
+      fieldName: "addGroupParticipant",
+      dataSource: groupServiceAPIDatasource,
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        "./resolvers/groups-service/addGroupParticipant.js"
+      ),
+    });
+
+    new appsync.Resolver(this, "getGroupResolver", {
       api,
       typeName: "Query",
-      fieldName: "getPackagesByStatus",
-      dataSource: packageServiceAPIDatasource,
+      fieldName: "getGroup",
+      dataSource: groupServiceAPIDatasource,
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        "./resolvers/package-service/getPackagesByStatus.js"
-      ),
+      code: appsync.Code.fromAsset("./resolvers/groups-service/getGroup.js"),
     });
 
-    new appsync.Resolver(this, "createPackageResolver", {
-      api,
-      typeName: "Mutation",
-      fieldName: "createPackage",
-      dataSource: packageServiceAPIDatasource,
-      runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        "./resolvers/package-service/createPackage.js"
-      ),
-    });
-
-    new appsync.Resolver(this, "getPackageResolver", {
+    new appsync.Resolver(this, "getGroupsResolver", {
       api,
       typeName: "Query",
-      fieldName: "getPackage",
-      dataSource: packageServiceAPIDatasource,
+      fieldName: "getGroups",
+      dataSource: groupServiceAPIDatasource,
       runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset("./resolvers/package-service/getPackage.js"),
+      code: appsync.Code.fromAsset("./resolvers/groups-service/getGroups.js"),
     });
-
-    new appsync.Resolver(this, "sendPackagePickupRequestResolver", {
-      api,
-      typeName: "Query",
-      fieldName: "sendPackagePickupRequest",
-      dataSource: packageServiceAPIDatasource,
-      runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        "./resolvers/package-service/sendPackagePickupRequest.js"
-      ),
-    });
-    new appsync.Resolver(this, "packageDeliveryMovementResolver", {
+    new appsync.Resolver(this, "addTypingIndicatorResolver", {
       api,
       typeName: "Mutation",
-      fieldName: "packageDeliveryMovement",
-      dataSource: deliveryServiceAPIDatasource,
+      fieldName: "addTypingIndicator",
+      dataSource: typingAPIDatasource,
       runtime: appsync.FunctionRuntime.JS_1_0_0,
       code: appsync.Code.fromAsset(
-        "./resolvers/delivery-service/packageDeliveryMovement.js"
-      ),
-    });
-
-    new appsync.Resolver(this, "packageDropOffResolver", {
-      api,
-      typeName: "Mutation",
-      fieldName: "packageDropOff",
-      dataSource: deliveryServiceAPIDatasource,
-      runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        "./resolvers/delivery-service/packageDropOff.js"
-      ),
-    });
-
-    new appsync.Resolver(this, "confirmPaymentResolver", {
-      api,
-      typeName: "Mutation",
-      fieldName: "confirmPayment",
-      dataSource: paymentsAPIDatasource,
-      runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        "./resolvers/payments-service/confirmPayment.js"
-      ),
-    });
-
-    new appsync.Resolver(this, "cancelPaymentResolver", {
-      api,
-      typeName: "Mutation",
-      fieldName: "cancelPayment",
-      dataSource: paymentsAPIDatasource,
-      runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        "./resolvers/payments-service/cancelPayment.js"
+        "./resolvers/typing-indicator-service/addTypingIndicator.js"
       ),
     });
 
