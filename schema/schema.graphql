@@ -1,0 +1,117 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type Mutation {
+  createUserAccount(userInput: CreateUserInput!): User! @aws_api_key
+  createGroup(input: CreateGroupInput!): Group! @aws_api_key
+  addGroupParticipant(
+    group_id: String!
+    user_id: String!
+    role: ROLE!
+  ): String! @aws_api_key
+  sendMessage(input: CreateMessageInput!): Message! @aws_api_key
+  addTypingIndicator(input: CreateTypingInput!): Typing! @aws_api_key
+}
+
+type Query {
+  getUserAccount(userId: String!): User! @aws_api_key
+  getGroup(group_id: String!): Group! @aws_api_key
+  getGroupMessages(group_id: String, token: String, limit: Int!): [Group!]!
+    @aws_api_key
+}
+type Subscription {
+  onCreateMessages: Message
+    @aws_subscribe(mutations: ["sendMessage"])
+    @aws_api_key
+
+  onAddingTypingIndicator: Typing
+    @aws_subscribe(mutations: ["addTypingIndicator"])
+    @aws_api_key
+}
+type User @aws_api_key {
+  id: String!
+  username: String!
+  email: AWSEmail!
+  profile_pic_url: String
+  created_at: AWSTimestamp!
+  updated_at: AWSTimestamp
+}
+
+type Group @aws_api_key {
+  id: String!
+  group_name: String!
+  creator_id: String!
+  group_description: String!
+  last_message: Message
+  group_url: String
+  created_at: AWSTimestamp!
+  members: [Member!]!
+  updated_at: AWSTimestamp
+}
+
+type Message @aws_api_key {
+  id: String!
+  user_id: String!
+  group_id: String!
+  message_type: MESSAGETYPE!
+  message_content: String
+  image_url: String
+  video_url: String
+  created_at: AWSTimestamp!
+  updated_at: AWSTimestamp
+}
+
+input CreateMessageInput @aws_api_key {
+  user_id: String!
+  group_id: String!
+  message_type: MESSAGETYPE!
+  message_content: String
+  image_url: String
+  video_url: String
+}
+
+input CreateGroupInput @aws_api_key {
+  group_name: String!
+  creator_id: String!
+  group_description: String!
+  group_url: String
+}
+
+type Typing @aws_api_key {
+  id: String!
+  userId: String!
+  groupId: String!
+  typing: Boolean!
+}
+
+type CreateTypingInput @aws_api_key {
+  userId: String!
+  groupId: String!
+  typing: Boolean!
+}
+
+type Member @aws_api_key {
+  user_id: String!
+  role: ROLE!
+}
+input MemberInput @aws_api_key {
+  user_id: String!
+  role: ROLE!
+}
+enum ROLE {
+  ADMIN
+  MEMBER
+}
+enum MESSAGETYPE {
+  TEXT
+  IMAGE
+  VIDEO
+}
+input CreateUserInput @aws_cognito_user_pools {
+  username: String!
+  email: AWSEmail!
+  profile_pic_url: String
+}
