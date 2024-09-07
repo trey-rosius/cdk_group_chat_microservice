@@ -34,22 +34,22 @@ export class CdkGroupChatMicroserviceStack extends cdk.Stack {
 
     const userServiceAPIDatasource = api.addHttpDataSource(
       "usersService",
-      "http://user-service-ALB-2010888504.us-east-1.elb.amazonaws.com"
+      "http://user-service-ALB-784304730.us-east-1.elb.amazonaws.com"
     );
 
     const groupServiceAPIDatasource = api.addHttpDataSource(
       "groupsService",
-      "http://group-service-ALB-705424959.us-east-1.elb.amazonaws.com"
+      "http://group-service-ALB-55079206.us-east-1.elb.amazonaws.com"
     );
 
     const messageServiceAPIDatasource = api.addHttpDataSource(
       "messagesService",
-      "http://message-service-ALB-1078654750.us-east-1.elb.amazonaws.com"
+      "http://message-service-ALB-94947678.us-east-1.elb.amazonaws.com"
     );
 
     const typingAPIDatasource = api.addHttpDataSource(
       "typingIndicatorService",
-      "http://typing-indicator-service-ALB-380461430.us-east-1.elb.amazonaws.com"
+      "http://typing-indicator-service-ALB-929286925.us-east-1.elb.amazonaws.com"
     );
 
     const nonDataSource = api.addNoneDataSource("none");
@@ -110,7 +110,7 @@ export class CdkGroupChatMicroserviceStack extends cdk.Stack {
       api,
       typeName: "Query",
       fieldName: "getGroupMessages",
-      dataSource: messageServiceAPIDatasource,
+      dataSource: groupServiceAPIDatasource,
       runtime: appsync.FunctionRuntime.JS_1_0_0,
       code: appsync.Code.fromAsset(
         "./resolvers/messages-service/getMessagesPerGroup.js"

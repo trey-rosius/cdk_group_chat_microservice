@@ -19,11 +19,7 @@ type Mutation {
 type Query {
   getUserAccount(user_id: String!): User! @aws_api_key
   getGroup(group_id: String!): Group! @aws_api_key
-  getGroupMessages(
-    group_id: String!
-    token: String
-    limit: Int!
-  ): GroupMessagesResult! @aws_api_key
+  getGroupMessages(group_id: String!): GroupMessagesResult! @aws_api_key
   getGroups(token: String, limit: Int!): GroupsResult! @aws_api_key
 }
 type Subscription {
@@ -53,6 +49,7 @@ type Group @aws_api_key {
   group_url: String
   created_at: AWSTimestamp!
   members: [Member!]!
+  messages: [Message!]
   updated_at: AWSTimestamp
 }
 

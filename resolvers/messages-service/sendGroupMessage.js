@@ -10,7 +10,7 @@ export function request(ctx) {
   const messageItem = {
     ...input,
     id,
-    createdAt: timestamp,
+    created_at: timestamp,
   };
 
   return {

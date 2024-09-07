@@ -1,5 +1,5 @@
 export function request(ctx) {
-  const { group_id, token, limit } = ctx.args;
+  const { group_id } = ctx.args;
 
   return {
     version: "2018-05-29",
@@ -11,7 +11,7 @@ export function request(ctx) {
         Accept: "application/json",
       },
     },
-    resourcePath: `/groups/${group_id}/messages?limit=${limit}`,
+    resourcePath: `/groups/${group_id}/messages`,
   };
 }
 
