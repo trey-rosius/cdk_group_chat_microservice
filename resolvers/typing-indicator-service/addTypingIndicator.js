@@ -1,6 +1,6 @@
 export function request(ctx) {
   const { input } = ctx.args;
-
+  const id = util.autoKsuid();
   return {
     version: "2018-05-29",
     method: "POST",
@@ -13,6 +13,7 @@ export function request(ctx) {
       },
       body: {
         ...input,
+        id,
       },
     },
   };
