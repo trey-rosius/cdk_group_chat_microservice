@@ -18,5 +18,5 @@ export function response(ctx) {
   console.log(`response is ${ctx.result}`);
   const res = JSON.parse(ctx.result.body);
 
-  return { items: res };
+  return { items: res["users"] };
 }
