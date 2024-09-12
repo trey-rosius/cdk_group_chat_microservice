@@ -117,6 +117,15 @@ export class CdkGroupChatMicroserviceStack extends cdk.Stack {
       ),
     });
 
+    new appsync.Resolver(this, "getUsersResolver", {
+      api,
+      typeName: "Query",
+      fieldName: "getUsers",
+      dataSource: userServiceAPIDatasource,
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset("./resolvers/users-service/getUsers.js"),
+    });
+
     new appsync.Resolver(this, "createGroupResolver", {
       api,
       typeName: "Mutation",
@@ -156,14 +165,6 @@ export class CdkGroupChatMicroserviceStack extends cdk.Stack {
       code: appsync.Code.fromAsset("./resolvers/groups-service/getGroup.js"),
     });
 
-    new appsync.Resolver(this, "getGroupsResolver", {
-      api,
-      typeName: "Query",
-      fieldName: "getGroups",
-      dataSource: groupServiceAPIDatasource,
-      runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset("./resolvers/groups-service/getGroups.js"),
-    });
     new appsync.Resolver(this, "addTypingIndicatorResolver", {
       api,
       typeName: "Mutation",

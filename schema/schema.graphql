@@ -21,6 +21,7 @@ type Query {
   getGroup(group_id: String!): Group! @aws_api_key
   getGroupMessages(group_id: String!): GroupMessagesResult! @aws_api_key
   getGroups(token: String, limit: Int!): GroupsResult! @aws_api_key
+  getUsers: UsersResult! @aws_api_key
 }
 type Subscription {
   onCreateMessages: Message
@@ -58,6 +59,10 @@ type GroupMessagesResult @aws_api_key {
 }
 type GroupsResult @aws_api_key {
   items: [Group!]!
+}
+
+type UsersResult @aws_api_key {
+  items: [User!]!
 }
 
 type Message @aws_api_key {

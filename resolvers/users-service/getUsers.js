@@ -1,6 +1,4 @@
 export function request(ctx) {
-  const { token, limit } = ctx.args;
-
   return {
     version: "2018-05-29",
     method: "GET",
@@ -11,7 +9,8 @@ export function request(ctx) {
         Accept: "application/json",
       },
     },
-    resourcePath: `/groups?limit=${limit}`,
+
+    resourcePath: `/users`,
   };
 }
 
